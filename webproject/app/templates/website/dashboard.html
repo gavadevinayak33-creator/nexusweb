@@ -1,0 +1,228 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block content %}
+
+
+
+<!-- Cursor -->
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- BG -->
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<!-- NAV -->
+{% comment %} <nav >
+  <a href="/" class="nav-logo">NEXUS ELITE</a>
+  <div class="nav-right">
+    <div class="nav-badge">Admin Panel</div>
+    
+  </div>
+</nav> {% endcomment %}
+
+<!-- DASHBOARD -->
+<a href="/" class="nav-back">Home</a>
+<section class="dashboard">
+
+  <!-- PAGE HEADER -->
+  <div class="page-header reveal visible">
+    <div class="page-header-left">
+      <div class="eyebrow">Control Center</div>
+      <h1>Admin <span>Dashboard</span></h1>
+    </div>
+
+    
+    
+    <div class="live-dot">Live Data</div>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="card-container">
+    <div class="card total reveal stagger-1">
+      <span class="card-icon">📊</span>
+      <h3>Total Bookings</h3>
+      <div class="stat" id="totalCount">{{ total_bookings }}</div>
+    </div>
+
+    {% for city in city_data %}
+    <div class="card reveal stagger-{{ forloop.counter|add:1 }}">
+      <span class="card-icon">
+        {% if city.city == "Pune" %}🏙
+        {% elif city.city == "Ahmedabad" %}🌆
+        {% elif city.city == "Goa" %}🌊
+        {% elif city.city == "Bengaluru" %}💻
+        {% else %}📍{% endif %}
+      </span>
+      <h3>{{ city.city }}</h3>
+      <div class="stat">{{ city.total }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- LATEST BOOKINGS -->
+  <div class="table-box reveal">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-label">Recent Activity</div>
+        <h2>Latest Bookings</h2>
+      </div>
+      <a href="#" class="export-btn">↓ Export</a>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Search bookings..." oninput="filterTable(this, 'latestTable')" />
+    </div>
+
+    <div class="table-wrap">
+      <table id="latestTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>City</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in latest_bookings %}
+          <tr>
+            <td><span class="row-num">{{ forloop.counter|stringformat:"02d" }}</span></td>
+            <td style="color: var(--text); font-weight: 500;">{{ b.name }}</td>
+            <td>{{ b.email }}</td>
+            <td>{{ b.phone }}</td>
+            <td><span class="city-badge">{{ b.city }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">
+            <div class="empty-state">
+              <span class="empty-icon">📭</span>
+              No bookings yet
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ALL BOOKINGS -->
+  <div class="table-box reveal">
+    <div class="section-head">
+      <div class="section-head-left">
+        <div class="section-label">Full Records</div>
+        <h2>All Bookings</h2>
+      </div>
+      <span class="record-count">{{ all_bookings|length }} records</span>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Filter by name, email, city..." oninput="filterTable(this, 'allTable')" />
+    </div>
+
+    <div class="table-wrap">
+      <table id="allTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>City</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in all_bookings %}
+          <tr>
+            <td><span class="row-num">{{ forloop.counter|stringformat:"02d" }}</span></td>
+            <td style="color: var(--text); font-weight: 500;">{{ b.name }}</td>
+            <td>{{ b.email }}</td>
+            <td>{{ b.phone }}</td>
+            <td><span class="city-badge">{{ b.city }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5">
+            <div class="empty-state">
+              <span class="empty-icon">📭</span>
+              No bookings found
+            </div>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
+<script>
+  // ── CURSOR ──
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+  });
+  (function lerpCursor() {
+    rx += (mx - rx) * 0.12; ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(lerpCursor);
+  })();
+  document.querySelectorAll('a, button, .card, input, tr').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      ring.style.width = '56px'; ring.style.height = '56px'; ring.style.opacity = '1';
+    });
+    el.addEventListener('mouseleave', () => {
+      ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '0.6';
+    });
+  });
+
+  // ── CARD MAGNETIC GLOW ──
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', ((e.clientX - r.left) / r.width * 100) + '%');
+      card.style.setProperty('--my', ((e.clientY - r.top) / r.height * 100) + '%');
+    });
+  });
+
+  // ── TABLE FILTER ──
+  function filterTable(input, tableId) {
+    const q = input.value.toLowerCase();
+    document.querySelectorAll(`#${tableId} tbody tr`).forEach(row => {
+      row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+    });
+  }
+
+  // ── COUNT-UP ANIMATION ──
+  document.querySelectorAll('.stat').forEach(el => {
+    const target = parseInt(el.innerText) || 0;
+    if (!target) return;
+    let current = 0;
+    const step = Math.max(1, Math.floor(target / 40));
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.innerText = current;
+      if (current >= target) clearInterval(timer);
+    }, 30);
+  });
+
+  // ── SCROLL REVEAL ──
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+  // ── NAV SCROLL ──
+  window.addEventListener('scroll', () => {
+    const nav = document.getElementById('mainNav');
+    nav.style.background = window.scrollY > 40 ? 'rgba(6,6,8,0.97)' : 'rgba(6,6,8,0.8)';
+    nav.style.padding = window.scrollY > 40 ? '0.8rem 4rem' : '1.2rem 4rem';
+  });
+</script>
+
+{% endblock %}

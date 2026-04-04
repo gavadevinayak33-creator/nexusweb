@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {% load static %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEXUS ELITE</title>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ✅ NAVBAR -->
+    <header class="site-header">
+      <div class="logo">NEXUS ELITE</div>
+
+      <!-- ✅ HAMBURGER -->
+      <button
+        class="hamburger"
+        id="hamburger"
+        type="button"
+        onclick="toggleMenu()"
+        aria-label="Toggle navigation"
+        aria-expanded="false"
+        aria-controls="navbar"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="navbar" id="navbar">
+        <ul class="nav-links">
+          <li><a href="#about" onclick="closeMenu()">About</a></li>
+          <li><a href="#Cities&Events" onclick="closeMenu()">Cities</a></li>
+          <li><a href="#projects-section" onclick="closeMenu()">Projects</a></li>
+          <li><a href="#" onclick="closeMenu()">SPONSOR OPTIONS</a></li>
+          <li><a href="#Participate" onclick="closeMenu()">Participate</a></li>
+          <li><a href="#contact" onclick="closeMenu()">Contact</a></li>
+        </ul>
+
+        <a href="{% url 'dashboard' %}" class="dashboard-btn" onclick="closeMenu()">Dashboard</a>
+      </nav>
+    </header>
+
+    <!-- 🔥 PAGE CONTENT -->
+    {% block content %}
+    {% endblock %}
+
+    <!-- ✅ FOOTER -->
+    <footer>
+      © 2026 Nexus Elite. All rights reserved.<br />
+      Participation subject to approval to maintain premium audience quality.
+    </footer>
+
+    <!-- ✅ NAVBAR SCRIPT -->
+    <script>
+      function toggleMenu() {
+        const navbar = document.getElementById("navbar");
+        const hamburger = document.getElementById("hamburger");
+
+        navbar.classList.toggle("active");
+        hamburger.classList.toggle("active");
+
+        const isExpanded = hamburger.classList.contains("active");
+        hamburger.setAttribute("aria-expanded", isExpanded);
+      }
+
+      function closeMenu() {
+        const navbar = document.getElementById("navbar");
+        const hamburger = document.getElementById("hamburger");
+
+        navbar.classList.remove("active");
+        hamburger.classList.remove("active");
+        hamburger.setAttribute("aria-expanded", "false");
+      }
+
+      window.addEventListener("resize", function () {
+        if (window.innerWidth > 991) {
+          closeMenu();
+        }
+      });
+
+      document.addEventListener("click", function (e) {
+        const navbar = document.getElementById("navbar");
+        const hamburger = document.getElementById("hamburger");
+        const header = document.querySelector(".site-header");
+
+        if (!header.contains(e.target)) {
+          navbar.classList.remove("active");
+          hamburger.classList.remove("active");
+          hamburger.setAttribute("aria-expanded", "false");
+        }
+      });
+    </script>
+  </body>
+</html>

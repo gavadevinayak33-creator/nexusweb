@@ -1,0 +1,24 @@
+<button id="pay-btn">Pay Now</button>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+var options = {
+    "key": "YOUR_KEY",
+    "amount": "{{ payment.amount }}",
+    "currency": "INR",
+    "name": "Nexus Elite",
+    "description": "Booking Payment",
+
+    "handler": function (response){
+        alert("Payment Successful!");
+    }
+};
+
+var rzp = new Razorpay(options);
+
+document.getElementById('pay-btn').onclick = function(e){
+    rzp.open();
+    e.preventDefault();
+}
+</script>

@@ -1,0 +1,208 @@
+{% extends 'layout.html' %}
+{% load static %}
+{% block content %}
+
+
+
+<!-- Cursor -->
+<div id="cursorDot" class="cursor-dot"></div>
+<div id="cursorRing" class="cursor-ring"></div>
+<!-- Bg orbs -->
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<!-- NAV -->
+{% comment %} <nav>
+  <a href="/" class="nav-logo">NEXUS ELITE</a>
+  <a href="{% url "Home_page" %}" class="">Back to Home</a>
+</nav> {% endcomment %}
+
+<!-- FORM SECTION -->
+<section class="form-section">
+  <div class="form-wrapper reveal visible">
+
+    <!-- LEFT PANEL -->
+    <div class="form-left">
+      <div class="eyebrow">Registration</div>
+      <h1>
+        <span>BOOK</span>
+        <em>YOUR</em>
+        <span>SLOT</span>
+      </h1>
+      <p>Secure your place at India's most exclusive B2B business summit. Limited seats available.</p>
+
+      <div class="benefits">
+        <div class="benefit"><div class="benefit-dot"></div>Curated B2B Networking Sessions</div>
+        <div class="benefit"><div class="benefit-dot"></div>5-Star Premium Venue Experience</div>
+        <div class="benefit"><div class="benefit-dot"></div>Media & Podcast Zone Access</div>
+        <div class="benefit"><div class="benefit-dot"></div>Private Meeting Spaces</div>
+        <div class="benefit"><div class="benefit-dot"></div>Brand Visibility & Media Exposure</div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="form-right">
+
+      <!-- STEP INDICATOR -->
+      <div class="steps">
+        <div class="step">
+          <div class="step-circle {% if verified %}done{% elif otp_sent %}done{% else %}active{% endif %}">
+            {% if verified or otp_sent %}✓{% else %}1{% endif %}
+          </div>
+          <div class="step-label">Email</div>
+        </div>
+        <div class="step-line {% if otp_sent or verified %}done{% endif %}"></div>
+        <div class="step">
+          <div class="step-circle {% if verified %}done{% elif otp_sent %}active{% endif %}">
+            {% if verified %}✓{% else %}2{% endif %}
+          </div>
+          <div class="step-label">Verify</div>
+        </div>
+        <div class="step-line {% if verified %}done{% endif %}"></div>
+        <div class="step">
+          <div class="step-circle {% if verified %}active{% endif %}">3</div>
+          <div class="step-label">Book</div>
+        </div>
+      </div>
+
+      <!-- FORM HEADER -->
+      <div class="form-header">
+        <div class="label">
+          {% if not otp_sent and not verified %}Step 1 of 3
+          {% elif otp_sent and not verified %}Step 2 of 3
+          {% else %}Step 3 of 3{% endif %}
+        </div>
+        <h2>
+          {% if not otp_sent and not verified %}Enter Email
+          {% elif otp_sent and not verified %}Verify OTP
+          {% else %}Complete Booking{% endif %}
+        </h2>
+      </div>
+
+      <!-- ERROR MESSAGE -->
+      {% if error %}
+      <div class="msg-error">⚠ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <!-- STEP 1: EMAIL -->
+        {% if not otp_sent and not verified %}
+        <div class="field reveal visible stagger-1">
+          <label>Email Address</label>
+          <input type="email" name="email" placeholder="yourname@company.com" required autocomplete="email" />
+        </div>
+        <button type="submit" name="send_otp" class="otp-btn reveal visible stagger-2" id="sendOtpBtn">
+          <span class="btn-text">Send OTP</span>
+          <span class="spinner"></span>
+        </button>
+        {% endif %}
+
+        <!-- STEP 2: OTP -->
+        {% if otp_sent and not verified %}
+        <div class="field reveal visible stagger-1">
+          <label>One-Time Password</label>
+          <input type="text" name="otp" placeholder="Enter 6-digit OTP" required autocomplete="one-time-code" maxlength="6" />
+        </div>
+        <button type="submit" name="verify_otp" class="otp-btn reveal visible stagger-2" id="verifyOtpBtn">
+          <span class="btn-text">Verify OTP</span>
+          <span class="spinner"></span>
+        </button>
+        <p class="otp-hint">Didn't receive it? <span onclick="document.querySelector('form').submit()">Resend OTP</span></p>
+        {% endif %}
+
+        <!-- STEP 3: DETAILS -->
+        {% if verified %}
+        <div class="verified-badge">Email Verified</div>
+
+        <div class="field reveal visible stagger-1">
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="Your full name" required autocomplete="name" />
+        </div>
+        <div class="field reveal visible stagger-2">
+          <label>Phone Number</label>
+          <input type="tel" name="phone" placeholder="+91 00000 00000" required autocomplete="tel" />
+        </div>
+        <div class="field reveal visible stagger-3">
+          <label>Select City</label>
+          <div class="select-wrapper">
+            <select name="city" required>
+              <option value="" disabled selected>Choose your city</option>
+              <option value="Pune">Pune — 23–24 May 2026</option>
+              <option value="Ahmedabad">Ahmedabad — 6–7 June 2026</option>
+              <option value="Goa">Goa — 15–16 Sep 2026</option>
+              <option value="Bengaluru">Bengaluru — 15–16 Oct 2026</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" name="final_submit" class="submit-btn reveal visible stagger-3">
+          <span>🔥 Confirm Booking</span>
+        </button>
+        {% endif %}
+
+      </form>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  // ── CURSOR ──
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px';
+    dot.style.top = my + 'px';
+  });
+  function lerpCursor() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(lerpCursor);
+  }
+  lerpCursor();
+
+  document.querySelectorAll('a, button, input, select').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      ring.style.width = '56px'; ring.style.height = '56px'; ring.style.opacity = '1';
+      dot.style.transform = 'translate(-50%,-50%) scale(1.5)';
+    });
+    el.addEventListener('mouseleave', () => {
+      ring.style.width = '36px'; ring.style.height = '36px'; ring.style.opacity = '0.6';
+      dot.style.transform = 'translate(-50%,-50%) scale(1)';
+    });
+  });
+
+  // ── BUTTON LOADING STATE ──
+  document.querySelectorAll('button[type="submit"]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      this.classList.add('loading');
+    });
+  });
+
+  // ── OTP INPUT — numbers only & auto-format ──
+  const otpInput = document.querySelector('input[name="otp"]');
+  if (otpInput) {
+    otpInput.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+  }
+
+  // ── SCROLL REVEAL ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── NAV SCROLL ──
+  window.addEventListener('scroll', () => {
+    const nav = document.querySelector('nav');
+    nav.style.background = window.scrollY > 40 ? 'rgba(6,6,8,0.97)' : 'rgba(6,6,8,0.8)';
+  });
+</script>
+
+{% endblock %}
