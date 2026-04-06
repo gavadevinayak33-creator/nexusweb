@@ -128,4 +128,6 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'vinigavade@gmail.com'
 EMAIL_HOST_PASSWORD = 'pancxewbavdmtnpw'
 
-
+# -------------------------------------------------------------------------------
+RAZORPAY_KEY_ID = "rzp_test_SaFsdZVuy9nrcD"
+RAZORPAY_KEY_SECRET = "movLlgkOvosDRR4TUIovjZyw"

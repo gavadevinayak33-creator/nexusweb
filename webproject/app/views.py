@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect
 from django.core.mail import send_mail
-from .models import Booking
 from django.conf import settings
+from django.db.models import Count
+from django.views.decorators.csrf import csrf_exempt
+
+from .models import Booking, Payment
 
 import random
+import razorpay
 
-from django.shortcuts import render
-from .models import Booking
-from django.db.models import Count
 
 # ---------------- HOME ----------------
 def Home_page(request):
@@ -19,18 +20,15 @@ def Conatact_page(request):
 
     if request.method == "POST":
 
-        # 👉 STEP 1: SEND OTP (ONLY EMAIL)
+        # 👉 STEP 1: SEND OTP
         if 'send_otp' in request.POST:
 
             email = request.POST.get('email')
-
             otp = str(random.randint(1000, 9999))
 
-            # session store
             request.session['otp'] = otp
             request.session['email'] = email
 
-            # EMAIL SEND
             send_mail(
                 subject='Your OTP Code',
                 message=f'Your OTP is {otp}',
@@ -59,56 +57,32 @@ def Conatact_page(request):
                 })
 
 
-        # 👉 STEP 3: FINAL SUBMIT (NOW NAME COMES HERE)
+        # 👉 STEP 3: FINAL SUBMIT → BOOKING + PAYMENT REDIRECT
         elif 'final_submit' in request.POST:
 
             if request.session.get('verified'):
 
-                Booking.objects.create(
-                    name=request.POST.get('name'),   # 👈 NOW FROM FORM
+                booking = Booking.objects.create(
+                    name=request.POST.get('name'),
                     email=request.session.get('email'),
                     phone=request.POST.get('phone'),
                     city=request.POST.get('city')
                 )
 
                 request.session.flush()
-                return redirect('Home_page')
+
+                # 🔥 IMPORTANT CHANGE
+                return redirect('create_payment', booking_id=booking.id)
 
     return render(request, 'website/Conatact.html')
 
 
-# ---------------- PAYMENT ----------------
-# def pay(request):
-#     client = razorpay.Client(auth=("YOUR_KEY", "YOUR_SECRET"))
-
-#     payment = client.order.create({
-#         "amount": 50000,
-#         "currency": "INR",
-#         "payment_capture": "1"
-#     })
-
-#     return render(request, "website/pay.html", {"payment": payment})
-
-
-
-
-# --------------------------------DASHBOARD----------------------------------------------------------------------
-
-
-
-
+# ---------------- DASHBOARD ----------------
 def dashboard(request):
 
-    # 👉 Total bookings
     total_bookings = Booking.objects.count()
-
-    # 👉 City wise count
     city_data = Booking.objects.values('city').annotate(total=Count('city'))
-
-    # 👉 Latest bookings (last 5)
     latest_bookings = Booking.objects.all().order_by('-id')[:5]
-
-    # 👉 All bookings (table)
     all_bookings = Booking.objects.all().order_by('-id')
 
     context = {
@@ -119,3 +93,60 @@ def dashboard(request):
     }
 
     return render(request, 'website/dashboard.html', context)
+
+
+# ---------------- PAYMENT CREATE ----------------
+def create_payment(request, booking_id):
+
+    booking = Booking.objects.get(id=booking_id)
+
+    client = razorpay.Client(
+        auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
+    )
+
+    amount = 500 * 100  # ₹500
+
+    payment = Payment.objects.create(
+        booking=booking,
+        amount=500,
+        status="Pending"
+    )
+
+    order = client.order.create({
+        "amount": amount,
+        "currency": "INR",
+        "payment_capture": "1"
+    })
+
+    payment.order_id = order['id']
+    payment.save()
+
+    context = {
+        "payment": payment,
+        "razorpay_key": settings.RAZORPAY_KEY_ID,
+        "amount": amount,
+    }
+
+    return render(request, "website/payment.html", context)
+
+
+# ---------------- PAYMENT SUCCESS ----------------
+@csrf_exempt
+def payment_success(request):
+
+    if request.method == "POST":
+
+        payment_id = request.POST.get('razorpay_payment_id')
+        order_id = request.POST.get('razorpay_order_id')
+
+        try:
+            payment = Payment.objects.get(order_id=order_id)
+
+            payment.payment_id = payment_id
+            payment.status = "Success"
+            payment.save()
+
+        except Payment.DoesNotExist:
+            pass
+
+        return redirect('Home_page')

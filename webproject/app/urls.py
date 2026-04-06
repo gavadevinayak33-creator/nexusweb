@@ -8,6 +8,9 @@ urlpatterns =[
     # path('pay',pay, name='pay'),
     path('dashboard', dashboard, name='dashboard'),
     
+     path('pay/<int:booking_id>/', create_payment, name='create_payment'),
+    path('payment-success/', payment_success, name='payment_success'),
+    
     
 
 ]
